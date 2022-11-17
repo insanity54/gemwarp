@@ -71,6 +71,10 @@ local function get_formspec(name, waypoints)
             'tooltip[warp_'..i..'_sapphire;Warp to '..name..' using 1 Sapphire]'
     end
 
+    if #waypoints==0 then
+        rows[1] = "label[2.5,3;You don't have any waypoints to warp to.\nCreate a waypoint to get started.]"
+    end
+
     return heading..table.concat(rows)
 end
 
