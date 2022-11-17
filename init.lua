@@ -5,30 +5,33 @@ local ui = unified_inventory
 local function warp(player, warp_point, item_cost)
 
     local player_name = player:get_player_name()
-    -- warp_point = vector.new(warp_point)
 
     if warp_point == nil then
         minetest.chat_send_player(player_name,"Invalid or un-set warp point.")
         return
     end
 
+    -- prevent warp if the destination is protected by another player
+    if minetest.is_protected(warp_point, player_name) then
+        minetest.chat_send_player(player:get_player_name(), "Can't warp there-- waypoint is protected by another player!")
+        return
+    end
+
+    -- ensure player can afford the warp
     local inv = minetest.get_inventory({type = "player", name = player_name})
     if not inv:contains_item("main", ItemStack(item_cost)) then
         minetest.chat_send_player(player_name,"You don't have any of that gemstone!")
         return
     end
 
+    -- collect payment for the warp
     inv:remove_item("main", ItemStack(item_cost))
     player:get_inventory():set_list("main", inv:get_list("main")) -- record state
     
+
+    -- do the warp
     player:set_pos(warp_point)
 
-    -- remove warp point if another player protected destination
-    minetest.after(2, function(pos, player, warp_point) 
-        if minetest.is_protected(pos, player:get_player_name()) then
-            minetest.chat_send_player(player:get_player_name(), "Can't warp there-- waypoint is protected by another player!")
-        end
-    end, pos, player, warp_point)
 end
 
 
@@ -58,10 +61,10 @@ local function get_formspec(name, waypoints)
         local name = waypoints[i]['name'] or "Waypoint "..i
         rows[i] = 
             'label[1,'..(i*0.95+0.25)..';'..name..']'..
-            'image_button[3.8,'..(i*0.95)..';0.5,0.5;ameythst.png;warp_'..i..'_amethyst;]'..
-            'image_button[4.6,'..(i*0.95)..';0.5,0.5;ruby.png;warp_'..i..'_ruby;]'..
-            'image_button[5.4,'..(i*0.95)..';0.5,0.5;emerald.png;warp_'..i..'_emerald;]'..
-            'image_button[6.2,'..(i*0.95)..';0.5,0.5;sapphire.png;warp_'..i..'_sapphire;]'..
+            'image_button[3.8,'..(i*0.95)..';0.5,0.5;ameythst.png;warp_'..i..'_amethyst; ]'..
+            'image_button[4.6,'..(i*0.95)..';0.5,0.5;ruby.png;warp_'..i..'_ruby; ]'..
+            'image_button[5.4,'..(i*0.95)..';0.5,0.5;emerald.png;warp_'..i..'_emerald; ]'..
+            'image_button[6.2,'..(i*0.95)..';0.5,0.5;sapphire.png;warp_'..i..'_sapphire; ]'..
             'tooltip[warp_'..i..'_amethyst;Warp to '..name..' using 1 Amethyst]'..
             'tooltip[warp_'..i..'_ruby;Warp to '..name..' using 1 Ruby]'..
             'tooltip[warp_'..i..'_emerald;Warp to '..name..' using 1 Emerald]'..
@@ -94,13 +97,13 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
             return true
         end
 
-        if fields['warp_'..i..'_sapphire'] ~= nil then
-            warp(player, world_pos, 'sapphire:sapphire')
+        if fields['warp_'..i..'_emerald'] ~= nil then
+            warp(player, world_pos, 'emerald:emerald')
             return true
         end
 
-        if fields['warp_'..i..'_emerald'] ~= nil then
-            warp(player, world_pos, 'emerald:emerald')
+        if fields['warp_'..i..'_sapphire'] ~= nil then
+            warp(player, world_pos, 'sapphire:sapphire')
             return true
         end
     end
