@@ -90,6 +90,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 
     for i = 1, #data do
+        -- bail if player doesnt have correct data
+        -- addresses https://github.com/insanity54/gemwarp/issues/4
+        if data[i]['world_pos'] == nil return false
+
         local world_pos = data[i]['world_pos']
         if fields['warp_'..i..'_amethyst'] ~= nil then
             warp(player, world_pos, 'amethyst:amethyst_ingot')
