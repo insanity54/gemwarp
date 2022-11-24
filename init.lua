@@ -92,7 +92,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     for i = 1, #data do
         -- bail if player doesnt have correct data
         -- addresses https://github.com/insanity54/gemwarp/issues/4
-        if data[i]['world_pos'] == nil return false
+        if data[i]['world_pos'] == nil then
+            minetest.log('warning', 'Player '..player:get_player_name()..' does not have waypoint data. How is this happening? Investigation needed! (see https://github.com/insanity54/gemwarp/issues/4)')
+            return false
+        end
 
         local world_pos = data[i]['world_pos']
         if fields['warp_'..i..'_amethyst'] ~= nil then
