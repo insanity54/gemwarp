@@ -30,6 +30,7 @@ local function warp(player, warp_point, item_cost)
     
 
     -- do the warp
+    minetest.log("action", "[gemwarp] " .. player_name .. " gemwarped to (" .. warp_point.x .. ", " .. warp_point.y .. ", " .. warp_point.z .. ")")
     player:set_pos(warp_point)
 
 end
