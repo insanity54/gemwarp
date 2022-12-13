@@ -63,7 +63,6 @@ local function get_formspec(name, waypoints)
         if waypoints[i] ~= nil and waypoints[i]['world_pos'] ~= nil then 
             is_waypoints_empty = false
             local name = waypoints[i]['name'] or "Waypoint "..i
-            print('waypoint'..i..': '..name)
             rows[i] = 
                 'label[1,'..(i*0.95+0.25)..';'..name..']'..
                 'image_button[3.8,'..(i*0.95)..';0.5,0.5;ameythst.png;warp_'..i..'_amethyst; ]'..
