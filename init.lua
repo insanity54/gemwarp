@@ -27,7 +27,7 @@ local function warp(player, warp_point, item_cost)
     -- collect payment for the warp
     inv:remove_item("main", ItemStack(item_cost))
     player:get_inventory():set_list("main", inv:get_list("main")) -- record state
-    
+
 
     -- do the warp
     minetest.log("action", "[gemwarp] " .. player_name .. " gemwarped to (" .. warp_point.x .. ", " .. warp_point.y .. ", " .. warp_point.z .. ")")
@@ -54,25 +54,32 @@ end
 local function get_formspec(name, waypoints)
     local heading
     local rows = {}
+    local is_waypoints_empty = true
 
     heading = 'size[8,8;]'..
         "label[0.375,0.5;Gem Warp]"
 
     for i = 1, #waypoints do
-        local name = waypoints[i]['name'] or "Waypoint "..i
-        rows[i] = 
-            'label[1,'..(i*0.95+0.25)..';'..name..']'..
-            'image_button[3.8,'..(i*0.95)..';0.5,0.5;ameythst.png;warp_'..i..'_amethyst; ]'..
-            'image_button[4.6,'..(i*0.95)..';0.5,0.5;ruby.png;warp_'..i..'_ruby; ]'..
-            'image_button[5.4,'..(i*0.95)..';0.5,0.5;emerald.png;warp_'..i..'_emerald; ]'..
-            'image_button[6.2,'..(i*0.95)..';0.5,0.5;sapphire.png;warp_'..i..'_sapphire; ]'..
-            'tooltip[warp_'..i..'_amethyst;Warp to '..name..' using 1 Amethyst]'..
-            'tooltip[warp_'..i..'_ruby;Warp to '..name..' using 1 Ruby]'..
-            'tooltip[warp_'..i..'_emerald;Warp to '..name..' using 1 Emerald]'..
-            'tooltip[warp_'..i..'_sapphire;Warp to '..name..' using 1 Sapphire]'
+        if waypoints[i] ~= nil and waypoints[i]['world_pos'] ~= nil then 
+            is_waypoints_empty = false
+            local name = waypoints[i]['name'] or "Waypoint "..i
+            print('waypoint'..i..': '..name)
+            rows[i] = 
+                'label[1,'..(i*0.95+0.25)..';'..name..']'..
+                'image_button[3.8,'..(i*0.95)..';0.5,0.5;ameythst.png;warp_'..i..'_amethyst; ]'..
+                'image_button[4.6,'..(i*0.95)..';0.5,0.5;ruby.png;warp_'..i..'_ruby; ]'..
+                'image_button[5.4,'..(i*0.95)..';0.5,0.5;emerald.png;warp_'..i..'_emerald; ]'..
+                'image_button[6.2,'..(i*0.95)..';0.5,0.5;sapphire.png;warp_'..i..'_sapphire; ]'..
+                'tooltip[warp_'..i..'_amethyst;Warp to '..name..' using 1 Amethyst]'..
+                'tooltip[warp_'..i..'_ruby;Warp to '..name..' using 1 Ruby]'..
+                'tooltip[warp_'..i..'_emerald;Warp to '..name..' using 1 Emerald]'..
+                'tooltip[warp_'..i..'_sapphire;Warp to '..name..' using 1 Sapphire]'
+        else
+            rows[i] = ''
+        end
     end
 
-    if #waypoints==0 then
+    if is_waypoints_empty then
         rows[1] = "label[2.5,3;You don't have any waypoints to warp to.\nCreate a waypoint to get started.]"
     end
 
@@ -88,36 +95,43 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
     local data = get_waypoint_data(player)
 
+    local is_handled = false
 
 
     for i = 1, #data do
-        -- bail if player doesnt have correct data
-        -- addresses https://github.com/insanity54/gemwarp/issues/4
-        if data[i]['world_pos'] == nil or data[i] == nil then
-            minetest.log('warning', 'Player '..player:get_player_name()..' does not have waypoint data. How is this happening? Investigation needed! (see https://github.com/insanity54/gemwarp/issues/4)')
-            return false
-        end
+        if data[i] ~= nil and data[i]['world_pos'] ~= nil then
+            if data[i]['world_pos'] == nil then
+                minetest.log('warning', 'Player '..player:get_player_name()..' does not have waypoint '..i..' data. How is this happening? Investigation needed! (see https://github.com/insanity54/gemwarp/issues/4)')
+                is_handled = false
+            end
 
-        local world_pos = data[i]['world_pos']
-        if fields['warp_'..i..'_amethyst'] ~= nil then
-            warp(player, world_pos, 'amethyst:amethyst_ingot')
-            return true
-        end
+            local world_pos = data[i]['world_pos']
+            if fields['warp_'..i..'_amethyst'] ~= nil then
+                warp(player, world_pos, 'amethyst:amethyst_ingot')
+                is_handled = true
+            end
 
-        if fields['warp_'..i..'_ruby'] ~= nil then
-            warp(player, world_pos, 'ruby:ruby')
-            return true
-        end
+            if fields['warp_'..i..'_ruby'] ~= nil then
+                warp(player, world_pos, 'ruby:ruby')
+                is_handled = true
+            end
 
-        if fields['warp_'..i..'_emerald'] ~= nil then
-            warp(player, world_pos, 'emerald:emerald')
-            return true
-        end
+            if fields['warp_'..i..'_emerald'] ~= nil then
+                warp(player, world_pos, 'emerald:emerald')
+                is_handled = true
+            end
 
-        if fields['warp_'..i..'_sapphire'] ~= nil then
-            warp(player, world_pos, 'sapphire:sapphire')
-            return true
+            if fields['warp_'..i..'_sapphire'] ~= nil then
+                warp(player, world_pos, 'sapphire:sapphire')
+                is_handled = true
+            end
         end
+    end
+
+    if is_handled then
+        return true
+    else
+        return false
     end
 end)
 
